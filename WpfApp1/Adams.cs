@@ -2,30 +2,45 @@
 using OxyPlot.Series;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 
 public class Adams : INotifyPropertyChanged
 {
+    private ObservableCollection<KeyValuePair<double, double>> _yValues;
+    private PlotModel _gPlotModel;
+    private Visibility _graphVisibility = Visibility.Collapsed;
+    private Visibility _tableVisibility = Visibility.Visible;
+    private string _maxDeviationRes;
+
     public double StepSize { get; set; }
     public double x0 { get; set; }
     public double y0 { get; set; }
     public double a { get; set; }
     public double b { get; set; }
-    public string maxDeviationRes { get; set; }
 
-    public ObservableCollection<double> YValues
+    public string maxDeviationRes
     {
-        get { return _yValues; }
+        get => _maxDeviationRes;
+        set
+        {
+            _maxDeviationRes = value;
+            NotifyPropertyChanged(nameof(maxDeviationRes));
+        }
+    }
+
+    public ObservableCollection<KeyValuePair<double, double>> YValues
+    {
+        get => _yValues;
         set
         {
             _yValues = value;
             NotifyPropertyChanged(nameof(YValues));
         }
     }
-    private ObservableCollection<double> _yValues;
-    private PlotModel _gPlotModel;
+
     public PlotModel GPlotModel
     {
-        get { return _gPlotModel; }
+        get => _gPlotModel;
         set
         {
             _gPlotModel = value;
@@ -33,117 +48,124 @@ public class Adams : INotifyPropertyChanged
         }
     }
 
+    public Visibility GraphVisibility
+    {
+        get => _graphVisibility;
+        set
+        {
+            _graphVisibility = value;
+            NotifyPropertyChanged(nameof(GraphVisibility));
+        }
+    }
+
+    public Visibility TableVisibility
+    {
+        get => _tableVisibility;
+        set
+        {
+            _tableVisibility = value;
+            NotifyPropertyChanged(nameof(TableVisibility));
+        }
+    }
+
     public Adams()
     {
-        YValues = new ObservableCollection<double>();
-        GPlotModel = new PlotModel { Title = "График решения методом Адамса" };
+        YValues = new ObservableCollection<KeyValuePair<double, double>>();
+        GPlotModel = new PlotModel { Title = "График решения" };
     }
 
     public void PlotGraph()
     {
         GPlotModel.Series.Clear();
-        var series1 = new LineSeries
-        {
-            Title = "Приближенное решение",
-            MarkerType = MarkerType.Circle
-        };
-        var series2 = new LineSeries
-        {
-            Title = "Точное решение",
-            MarkerType = MarkerType.Circle
-        };
-        int iter = (int)Math.Round((b - a) / StepSize);
-        double[] YTrue = new double[iter];
-        double y = y0;
-        double x = x0;
-        double C = y0 / x0;
+        var approxSeries = new LineSeries { Title = "Приближенное решение", MarkerType = MarkerType.Circle };
+        var exactSeries = new LineSeries { Title = "Точное решение", MarkerType = MarkerType.Circle };
+
+        int iter = (int)Math.Ceiling((b - a) / StepSize);
+        double C = (y0 - Math.Sin(x0) + 1) * Math.Exp(Math.Sin(x0));
         double maxDeviation = 0;
+
         for (int i = 0; i < iter; i++)
         {
-            y = C * (x + i * StepSize);
-            YTrue[i] = y;
-            double deviation = Math.Abs(YValues[i] - YTrue[i]);
-            if (deviation > maxDeviation)
+            double currentX = a + i * StepSize;
+            double exactY = Math.Sin(currentX) - 1 + C * Math.Exp(-Math.Sin(currentX));
+            exactSeries.Points.Add(new DataPoint(currentX, exactY));
+
+            if (i < YValues.Count)
             {
-                maxDeviation = deviation;
+                approxSeries.Points.Add(new DataPoint(currentX, YValues[i].Value));
+                double deviation = Math.Abs(YValues[i].Value - exactY);
+                maxDeviation = Math.Max(maxDeviation, deviation);
             }
         }
 
-        for (int i = 0; i < YValues.Count; i++)
-        {
-            series1.Points.Add(new DataPoint(x0 + i * StepSize, YValues[i]));
-            series2.Points.Add(new DataPoint(x0 + i * StepSize, YTrue[i]));
-        }
-
-        GPlotModel.Series.Add(series1);
-        GPlotModel.Series.Add(series2);
+        GPlotModel.Series.Add(approxSeries);
+        GPlotModel.Series.Add(exactSeries);
         GPlotModel.InvalidatePlot(true);
-        NotifyPropertyChanged(nameof(GPlotModel));
-        maxDeviationRes = $"Максимум отклонений в узловых точках приближенного решения от точного: {maxDeviation}";
+        maxDeviationRes = $"Максимальное отклонение: {maxDeviation:F6}";
     }
 
     public double FirstDerivative(double x, double y)
     {
-        return y / x;
+        return -y * Math.Cos(x) + Math.Cos(x) * Math.Sin(x);
     }
 
     public double SecondDerivative(double x, double y)
     {
-        return -y / (x * x) + 2 * y / (x * x * x);
+        return y * Math.Pow(Math.Cos(x), 2)
+               - 2 * Math.Pow(Math.Cos(x), 2) * Math.Sin(x)
+               + y * Math.Sin(x)
+               + Math.Pow(Math.Cos(x), 3)
+               - 3 * Math.Sin(x) * Math.Pow(Math.Cos(x), 2);
     }
 
     public double ThirdDerivative(double x, double y)
     {
-        return 2 * y / (x * x * x) - 6 * y / (x * x * x * x);
+        return -y * Math.Pow(Math.Cos(x), 3)
+               + 3 * y * Math.Cos(x) * Math.Pow(Math.Sin(x), 2)
+               - 6 * Math.Pow(Math.Cos(x), 3) * Math.Sin(x)
+               + 4 * Math.Cos(x) * Math.Pow(Math.Sin(x), 3)
+               - 3 * Math.Pow(Math.Cos(x), 2) * Math.Sin(x);
     }
 
     public double[] SolveDifferentialEquation()
     {
-        int iter = (int)Math.Round((b - a) / StepSize);
-        double x = x0;
-        double y = y0;
-        double dy = y0 / x0;
+        int iter = (int)Math.Ceiling((b - a) / StepSize);
         double[] Y = new double[iter];
         Y[0] = y0;
+        double x = a;
 
-        double[] dY = new double[iter];
-        dY[0] = dy;
-        double[] deltay1 = new double[iter - 1];
-        double[] deltay2 = new double[iter - 2];
-
-        for (int i = 1; i < iter; i++) // 2 итераций для шага 0.2
+        // Метод Тейлора для первых 3 точек
+        for (int i = 1; i < Math.Min(3, iter); i++)
         {
-            if (i < 3)
-            {
-                double yNext = y + x * FirstDerivative(x, y) + (x * x) * (SecondDerivative(x, y) / 2 + (x * x * x) * (ThirdDerivative(x, y))) / 6;
-                double dyNext = x / yNext;
-                Y[i] = yNext;
-                dY[i] = dyNext;
-                deltay1[i - 1] = dY[i] - dY[i - 1];
-                x += StepSize;
-                y = yNext;
-            }
-            else
-            {
-                deltay2[0] = deltay1[1] - deltay1[0];
-                double yNext = Y[i - 1] + StepSize * dY[i - 1] + StepSize * deltay1[i - 2] / 2 + StepSize * 5 / 12 * deltay2[i - 3] / 6;
-                double dyNext = x / yNext;
-                Y[i] = yNext;
-                dY[i] = dyNext;
-                deltay1[i - 1] = dY[i] - dY[i - 1];
-                deltay2[i - 2] = deltay1[i - 1] - deltay1[i - 2];
-                x += StepSize;
-                y = yNext;
-            }
+            double h = StepSize;
+            double f1 = FirstDerivative(x, Y[i - 1]);
+            double f2 = SecondDerivative(x, Y[i - 1]);
+            double f3 = ThirdDerivative(x, Y[i - 1]);
+
+            Y[i] = Y[i - 1] + h * f1 + h * h / 2 * f2 + h * h * h / 6 * f3;
+            x += h;
         }
-        YValues = new ObservableCollection<double>(Y);
+
+        // Метод Адамса-Башфорта 3-го порядка
+        for (int i = 3; i < iter; i++)
+        {
+            double h = StepSize;
+            double f0 = FirstDerivative(x - 3 * h, Y[i - 3]);
+            double f1 = FirstDerivative(x - 2 * h, Y[i - 2]);
+            double f2 = FirstDerivative(x - h, Y[i - 1]);
+
+            Y[i] = Y[i - 1] + h / 12 * (23 * f2 - 16 * f1 + 5 * f0);
+            x += h;
+        }
+
+        YValues = new ObservableCollection<KeyValuePair<double, double>>(
+            Enumerable.Range(0, iter)
+                      .Select(i => new KeyValuePair<double, double>(a + i * StepSize, Y[i]))
+        );
         return Y;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
-
-    protected void NotifyPropertyChanged(string propertyName)
-    {
+    protected void NotifyPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 }

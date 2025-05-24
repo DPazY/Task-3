@@ -1,93 +1,48 @@
-﻿using System;
-using System.ComponentModel;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using OxyPlot;
-using OxyPlot.Series;
-using OxyPlot.Wpf;
 
 namespace WpfApp1
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window
     {
-        Adams adams = new Adams();
-        private Visibility tableVisibility = Visibility.Visible;
-        private Visibility graphVisibility = Visibility.Collapsed;
+        private Adams _adams = new Adams();
 
         public MainWindow()
         {
-            InitializeComponent();
-            DataContext = this;
-        }
-
-        public Visibility TableVisibility
-        {
-            get => tableVisibility;
-            set
-            {
-                tableVisibility = value;
-                OnPropertyChanged(nameof(TableVisibility));
-            }
-        }
-
-        public Visibility GraphVisibility
-        {
-            get => graphVisibility;
-            set
-            {
-                graphVisibility = value;
-                OnPropertyChanged(nameof(GraphVisibility));
-            }
+            InitializeComponent(); 
+            DataContext = _adams;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (double.TryParse(txtX0.Text, out double x0) &&
                 double.TryParse(txtY0.Text, out double y0) &&
-                double.TryParse(txta.Text, out double a) &&
-                double.TryParse(txtb.Text, out double b) &&
-                double.TryParse(txth.Text, out double h))
-            {                
-                adams.x0 = x0;
-                adams.y0 = y0;
-                adams.a = a;
-                adams.b = b;
-                adams.StepSize = h;
-                adams.SolveDifferentialEquation();
-                adams.PlotGraph();
-                txtResult.Text = adams.maxDeviationRes;                
+                double.TryParse(txtA.Text, out double a) &&
+                double.TryParse(txtB.Text, out double b) &&
+                double.TryParse(txtH.Text, out double h))
+            {
+                _adams.x0 = x0;
+                _adams.y0 = y0;
+                _adams.a = a;
+                _adams.b = b;
+                _adams.StepSize = h;
+
+                _adams.SolveDifferentialEquation();
+                _adams.PlotGraph();
+                txtResult.Text = _adams.maxDeviationRes;
             }
             else
             {
-                txtResult.Text = "Пожалуйста, введите корректные числовые значения.";
+                _adams.maxDeviationRes = "Ошибка: введите корректные числовые значения.";
             }
         }
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            ShowResult();
-        }
+            if (RadioButtonGraph == null || RadioButtonTable == null) return;
 
-        private void ShowResult()
-        {
-            if (RadioButtonTable.IsChecked == true)
-            {
-                TableVisibility = Visibility.Visible;
-                GraphVisibility = Visibility.Collapsed;                
-            }
-            else if (RadioButtonGraph.IsChecked == true)
-            {
-                TableVisibility = Visibility.Collapsed;
-                GraphVisibility = Visibility.Visible;
-                
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            _adams.GraphVisibility = RadioButtonGraph.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+            _adams.TableVisibility = RadioButtonTable.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

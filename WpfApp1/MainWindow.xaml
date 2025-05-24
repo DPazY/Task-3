@@ -2,60 +2,96 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:oxy="http://oxyplot.org/wpf"
-        Title="4 Задание" Height="850" Width="550">
-    <Viewbox>
-        <Grid Height="850" Width="550">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        Title="Решение дифференциального уравнения методом Адамса" 
+        Height="850" 
+        Width="550">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Диффиренциальное уравнение для решения с помощью метода Адамса" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14"/>
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="xy' = y" Margin="25" HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="24"/>
-            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="Введите значения:" Margin="10"/>
-            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="10">
-                <TextBlock Text="x0:" Grid.ColumnSpan="2" Margin="5"/>
-                <TextBox x:Name="txtX0" Grid.ColumnSpan="2" Width="100" Margin="5"/>
-                <TextBlock Text="y0:" Grid.ColumnSpan="2" Margin="5"/>
-                <TextBox x:Name="txtY0" Grid.ColumnSpan="2" Width="100" Margin="5"/>
-            </StackPanel>
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" 
+                   Text="y' = -y cos x + cos x sin x" 
+                   HorizontalAlignment="Center" 
+                   Margin="10" 
+                   FontSize="24"/>
 
-            <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="Введите отрезок и шаг:" Margin="10"/>
-            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="10">
-                <TextBlock Text="a:" Grid.ColumnSpan="2" Margin="5"/>
-                <TextBox x:Name="txta" Grid.ColumnSpan="2" Width="100" Margin="5"/>
-                <TextBlock Text="b:" Grid.ColumnSpan="2" Margin="5"/>
-                <TextBox x:Name="txtb" Grid.ColumnSpan="2" Width="100" Margin="5"/>
-                <TextBlock Text="h:" Grid.ColumnSpan="2" Margin="5"/>
-                <TextBox x:Name="txth" Grid.ColumnSpan="2" Width="100" Margin="5"/>
-            </StackPanel>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" 
+                   Text="Введите начальные условия:" 
+                   Margin="10"/>
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" 
+                    Orientation="Horizontal" 
+                    Margin="10">
+            <TextBlock Text="x₀:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtX0" Width="80" Margin="5"/>
+            <TextBlock Text="y₀:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtY0" Width="80" Margin="5"/>
+        </StackPanel>
 
-            <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
-                <RadioButton x:Name="RadioButtonTable" Content="Таблица" IsChecked="True" Checked="RadioButton_Checked" Margin="5"/>
-                <RadioButton x:Name="RadioButtonGraph" Content="График" Checked="RadioButton_Checked" Margin="5"/>
-            </StackPanel>
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" 
+                   Text="Введите интервал [a, b] и шаг h:" 
+                   Margin="10"/>
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" 
+                    Orientation="Horizontal" 
+                    Margin="10">
+            <TextBlock Text="a:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtA" Width="80" Margin="5"/>
+            <TextBlock Text="b:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtB" Width="80" Margin="5"/>
+            <TextBlock Text="h:" Margin="5" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtH" Width="80" Margin="5"/>
+        </StackPanel>
 
-            <Button Grid.Row="5" Grid.ColumnSpan="2" Content="Решить" Click="Button_Click" Margin="10"/>
+        <Button Grid.Row="5" Grid.ColumnSpan="2" 
+                Content="Решить" 
+                Click="Button_Click" 
+                Margin="10" 
+                Width="100"/>
 
-            <TextBlock Grid.Row="6" Grid.ColumnSpan="2" x:Name="txtResult" Margin="10"/>
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center">
+            <RadioButton x:Name="RadioButtonTable" 
+                         Content="Таблица" 
+                         IsChecked="True" 
+                         Checked="RadioButton_Checked" 
+                         Margin="5"/>
+            <RadioButton x:Name="RadioButtonGraph" 
+                         Content="График" 
+                         Checked="RadioButton_Checked" 
+                         Margin="5"/>
+        </StackPanel>
 
-            <oxy:PlotView Grid.Row="8" Grid.Column="2" Model="{Binding GPlotModel}" Visibility="{Binding GraphVisibility}"/>
-            <DataGrid Grid.Row="8" Grid.Column="0" ItemsSource="{Binding YValues}" Margin="10" Visibility="{Binding TableVisibility}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Результат" Binding="{Binding}"/>
-                </DataGrid.Columns>
-            </DataGrid>
+        <TextBlock Grid.Row="7" Grid.ColumnSpan="2" 
+                   x:Name="txtResult"
+                   Margin="10"/>
 
-        </Grid>
-    </Viewbox>
+        <DataGrid Grid.Row="8" Grid.ColumnSpan="2" 
+                  ItemsSource="{Binding YValues}" 
+                  Visibility="{Binding TableVisibility}" 
+                  Margin="10" 
+                  AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="x" Binding="{Binding Key}"/>
+                <DataGridTextColumn Header="y" Binding="{Binding Value}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <oxy:PlotView Grid.Row="8" Grid.ColumnSpan="2"
+                      Model="{Binding GPlotModel}" 
+                      Visibility="{Binding GraphVisibility}" 
+                      Margin="10"/>
+    </Grid>
 </Window>
